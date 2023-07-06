@@ -6,6 +6,8 @@ import os
 from django.views.decorators.csrf import csrf_exempt
 from requests_oauthlib import OAuth2Session
 from django.shortcuts import render
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import FBUserData
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "2"
@@ -60,17 +62,29 @@ class facebookCallbackAPIView(APIView):
         request.session["facebook_id"] = user_data.get("id")
         request.session["name"] = user_data.get("name")
         request.session["email"] = user_data.get("email")
-        data={
+        data1={
+            'facebook_id': request.session["email"],
             'token': request.session["facebook_id"],
-            'email': request.session["email"]
+            'name': request.session["name"]
         }
-        if FBUserData.objects.filter(facebook_id=data['email'],token=data['token']).exists():
-            return Response({'msg': 'user already exist'}, status=status.HTTP_200_OK)
+        data = {}
+        if FBUserData.objects.filter(facebook_id=request.session["email"]).exists():
+            refresh = RefreshToken.for_user(FBUserData.objects.get(google_id=request.session["google_id"]))  # Replace `user` with your user object
 
-        FBUserData.objects.create(
+            # Add the JWT token to the response
+            data['access_token'] = str(refresh.access_token)
+            data['refresh_token'] = str(refresh)
+            return Response(data, status=status.HTTP_200_OK)
+        
+        user=FBUserData.objects.create(
             facebook_id=request.session["email"],
             token=request.session["facebook_id"],
             name=request.session["name"]
         )
+        refresh = RefreshToken.for_user(user)  # Replace `user` with your user object
+
+        # Add the JWT token to the response
+        data['access_token'] = str(refresh.access_token)
+        data['refresh_token'] = str(refresh)
 
         return Response(data, status=status.HTTP_200_OK)

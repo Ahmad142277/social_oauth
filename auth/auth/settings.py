@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'google',
     'facebook',
     'rest_framework',
+    'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'pdfapi',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +134,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
 }
+# settings.py
+
+
+

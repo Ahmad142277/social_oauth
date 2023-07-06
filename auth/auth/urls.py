@@ -21,4 +21,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("facebook/", include("facebook.urls")),
     path("google/", include("google.urls")),
+    path('api/', include('pdfapi.urls')),
 ]

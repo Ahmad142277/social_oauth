@@ -8,6 +8,7 @@ from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserData
 
@@ -54,16 +55,27 @@ class GoogleCallbackAPIView(APIView):
         request.session["google_id"] = id_info.get("email")
         request.session["token"] = id_info.get("sub")
         request.session["name"] = id_info.get("name")
-        data = {
-            'google_id': request.session["google_id"],
-            'token': request.session["token"]
-        }
-        if UserData.objects.filter(google_id=data['google_id'],token=data['token']).exists():
-            return Response({'msg': 'user already exist'}, status=status.HTTP_200_OK)
+        data={}
+        if UserData.objects.filter(google_id=request.session["google_id"]).exists():
+            refresh = RefreshToken.for_user(UserData.objects.get(google_id=request.session["google_id"]))  # Replace `user` with your user object
 
-        UserData.objects.create(
+            # Add the JWT token to the response
+            data['access_token'] = str(refresh.access_token)
+            data['refresh_token'] = str(refresh)
+
+            return Response(data, status=status.HTTP_200_OK)
+
+        user=UserData.objects.create(
             google_id=request.session["google_id"],
             token=request.session["token"],
             name=request.session["name"]
         )
+
+        # Generate JWT token
+        refresh = RefreshToken.for_user(user)  # Replace `user` with your user object
+
+        # Add the JWT token to the response
+        data['access_token'] = str(refresh.access_token)
+        data['refresh_token'] = str(refresh)
+
         return Response(data, status=status.HTTP_200_OK)
