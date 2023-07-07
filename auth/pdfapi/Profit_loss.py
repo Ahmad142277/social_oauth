@@ -6,21 +6,21 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 # data = {
-#     "date": "2023-07-05",
-#     "cash_in_bank": 50000,
-#     "total_current_assets": 50000,
-#     "total_assets": 100000,
-#     "net_income": 20000,
-#     "opening_balance_equity": 10000,
-#     "owner_loan": 5000,
-#     "retained_earning": 1000,
-#     "total_shareholder_equity": 31000,
-#     "total_liabilities_equity": 100000,
-#     "today_date_time": "2023-07-05 12:00:00"
+#     'date_from': '2023-01-01',
+#     'date_to': '2023-12-31',
+#     'revenue_general': 50000,
+#     'total_income': 50000,
+#     'gross_profit': 30000,
+#     'commissions_and_fees': 10000,
+#     'office_expenses': 8000,
+#     'other_selling_expenses': 2000,
+#     'total_expense': 20000,
+#     'net_earnings': 10000,
+#     'today_date_time': '2023-07-05 12:00:00'
 # }
 
 
-def bal_sheet_pdf(buffer, data):
+def pro_loss_pdf(file_name, data):
     current_datetime = datetime.datetime.now()
 
     # Extract date, time, and day
@@ -31,7 +31,7 @@ def bal_sheet_pdf(buffer, data):
     # Combine into a single string
     result = f"{current_day}, {current_date},  {current_time}."
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=60, bottomMargin=60)
+    doc = SimpleDocTemplate(file_name, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=60, bottomMargin=60)
     styles = getSampleStyleSheet()
     title_style = styles['Heading2']
     heading_style = styles['Heading3']
@@ -43,7 +43,7 @@ def bal_sheet_pdf(buffer, data):
     # Title
     title = Paragraph("PBCIX", title_style)
     heading = Paragraph("Profit and Loss", heading_style)
-    dates = Paragraph(f"As of {data['date']}", heading_style)
+    dates = Paragraph(f"{data['date_from']} - {data['date_to']}", heading_style)
 
     elements = []
     elements.append(title)
@@ -54,31 +54,23 @@ def bal_sheet_pdf(buffer, data):
         ['', 'TOTAL'],
     ]
     t2 = [
-        ["Assets", ""],
+
+        ["Income", ""],
+        ["- Revenue-General", f"{data['revenue_general']} ILS"],
+        ["Total Income", f"{data['total_income']} ILS"],
     ]
     t3 = [
-        ["Current Assets", ""],
-        ["- Cash in Bank", f"{data['cash_in_bank']} ILS"],
-        ["Total Current Assets", f"{data['total_current_assets']} ILS"],
-
+        ["GROSS PROFIT", f"{data['gross_profit']} ILS"],
     ]
     t4 = [
-        ["Total Assets", f"{data['total_assets']} ILS"],
+        ["Expenses", ""],
+        ["- Commissions and fees", f"{data['commissions_and_fees']} ILS"],
+        ["- Office expenses", f"{data['office_expenses']} ILS"],
+        ["- Other selling expenses", f"{data['other_selling_expenses']} ILS"],
+        ["Total Expenses", f"{data['total_expense']} ILS"],
     ]
     t5 = [
-        ["Liabilities and Shareholder's Equity", ""],
-    ]
-    t6 = [
-        ['Shareholders Equity', ''],
-        ['- Net income', f"{data['net_income']} ILS"],
-        ['- Opening Balance Equity', f"{data['opening_balance_equity']} ILS"],
-        ["- Owner's Loan", f"{data['owner_loan']} ILS"],
-        ['- Retained Earnings', f"{data['retained_earning']} ILS"],
-        ["Total Shareholder's Equity", f"{data['total_shareholder_equity']} ILS"],
-    ]
-    t7 = [
-
-        ['Total Liabilities and Equity', f"{data['total_liabilities_equity']} ILS"],
+        ["NET EARNINGS", f"{data['net_earnings']} ILS"],
     ]
 
     # Create the table with 2 columns and 10 rows
@@ -87,8 +79,6 @@ def bal_sheet_pdf(buffer, data):
     table3 = Table(t3, colWidths=[240, 240])
     table4 = Table(t4, colWidths=[240, 240])
     table5 = Table(t5, colWidths=[240, 240])
-    table6 = Table(t6, colWidths=[240, 240])
-    table7 = Table(t7, colWidths=[240, 240])
 
     table1.setStyle(TableStyle([
         ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
@@ -106,25 +96,9 @@ def bal_sheet_pdf(buffer, data):
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    table2.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
-        # Customize the top border for the first row  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
 
     # Add customized borders
-    table3.setStyle(TableStyle([
+    table2.setStyle(TableStyle([
         ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
         ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),  # Customize the top border for the first row
         ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),  # Customize the bottom border for the last row
@@ -142,7 +116,7 @@ def bal_sheet_pdf(buffer, data):
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    table4.setStyle(TableStyle([
+    table3.setStyle(TableStyle([
         ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
         ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
         # Customize the top border for the first row  # Customize the bottom border for the last row
@@ -153,6 +127,24 @@ def bal_sheet_pdf(buffer, data):
 
         # Align text in the second column (index 1) to the right
         ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    table4.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
+        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),  # Customize the top border for the first row
+        ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),  # Customize the bottom border for the last row
+        ('LINEBELOW', (0, -1), (-1, -1), 2, 'black'),  # Customize the bottom border for the last row
+        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
+        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
+        # Align text in the first column (index 0) to the left
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+
+        # Align text in the second column (index 1) to the right
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('FONTWEIGHT', (0, 1), (-1, -2), 'BOLD'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -174,49 +166,12 @@ def bal_sheet_pdf(buffer, data):
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    table6.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),  # Customize the top border for the first row
-        ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),  # Customize the bottom border for the last row
-        ('LINEBELOW', (0, -1), (-1, -1), 2, 'black'),  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTWEIGHT', (0, 1), (-1, -2), 'BOLD'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    table7.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
-        # Customize the top border for the first row  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
 
     elements.append(table1)
     elements.append(table2)
     elements.append(table3)
     elements.append(table4)
     elements.append(table5)
-    elements.append(table6)
-    elements.append(table7)
-
     footer_text = f"Accrual Basis {result}"
     footer = Paragraph(footer_text, paragraph_style)
 
@@ -229,4 +184,5 @@ def bal_sheet_pdf(buffer, data):
         canvas.restoreState()
 
     doc.build(elements, onFirstPage=add_footer, onLaterPages=add_footer)
+
 
