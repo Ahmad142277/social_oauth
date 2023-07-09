@@ -8,6 +8,9 @@ http://127.0.0.1:8000/api/profit_loss_pdf/
 
 http://127.0.0.1:8000/api/journal_pdf/
 
+http://127.0.0.1:8000/api/invoice_pdf/
+
+
 ## test input for pdf api
 ### for journal
 
@@ -106,3 +109,35 @@ http://127.0.0.1:8000/api/journal_pdf/
     "total_expense": 20000,
     "net_earnings": 10000
 }
+
+### for invoice
+
+{
+    "from": "John Doe",
+    "business_name": "ABC Company",
+    "from_address": "123 Main St, City, State, ZIP",
+    "bill_to": "Jane Smith",
+    "att": "Accounting Department",
+    "company_name": "XYZ Corp",
+    "invoice_no": "INV-001",
+    "date": "2023-07-09",
+    "due_date": "2023-08-09",
+    "total_amount": 1000.0,
+    "due_amount": 750.0,
+    "remit_to": "Agmandkan aksgjahs ahsgujsh sahjasjka agjsjokad",
+    "Purchase_details": [
+        {
+            "descipt_memo": "Item 1",
+            "amount": 100.0
+        },
+        {
+            "descipt_memo": "Item 2",
+            "amount": 200.0
+        },
+        {
+            "descipt_memo": "Item 3",
+            "amount": 300.0
+        }
+    ]
+}
+
