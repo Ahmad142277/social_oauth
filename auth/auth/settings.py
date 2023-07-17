@@ -39,10 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'google',
     'facebook',
-    'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'rest_framework',
+    'oauth2_provider',
+    'social_django',
+    'drf_social_oauth2',
     'pdfapi',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -53,24 +57,28 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'auth.urls'
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
+   {
+       'BACKEND': 'django.template.backends.django.DjangoTemplates',
+       'DIRS': [],
+       'APP_DIRS': True,
+       'OPTIONS': {
+           'context_processors': [
+               'django.template.context_processors.debug',
+               'django.template.context_processors.request',
+               'django.contrib.auth.context_processors.auth',
+               'django.contrib.messages.context_processors.messages',
+               'social_django.context_processors.backends',
+               'social_django.context_processors.login_redirect',
+           ],
+       },
+   },
 ]
 
 WSGI_APPLICATION = 'auth.wsgi.application'
@@ -129,12 +137,51 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+AUTHENTICATION_BACKENDS = (
+  'drf_social_oauth2.backends.DjangoOAuth2',
+  'django.contrib.auth.backends.ModelBackend',
+)
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+   'DEFAULT_AUTHENTICATION_CLASSES': (
+       'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+       'drf_social_oauth2.authentication.SocialAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    ),
+   )
 }
+CORS_ALLOWED_ORIGINS = [
+   "http://127.0.0.1:5000/protected_area",
+]
 # settings.py
 
+AUTH_USER_MODEL='accounts.Account'
 
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.facebook.FacebookAppOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
 
+    'drf_social_oauth2.backends.DjangoOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# Facebook configuration
+SOCIAL_AUTH_FACEBOOK_KEY = '407987610634920'
+SOCIAL_AUTH_FACEBOOK_SECRET = '7723f1b576be6935f43c80287a80c22c'
+
+# Define SOCIAL_AUTH_FACEBOOK_SCOPE to get extra permissions from Facebook.
+# Email is not sent by default, to get it, you must request the email permission.
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+   'fields': 'id, name, email'
+}
+SOCIAL_AUTH_USER_FIELDS=['email','first_name','username','password']
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "750007652305-5hgjrsifqmevqn3r22p7kti0e3m5a6fd.apps.googleusercontent.com"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
+
+# Define SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE to get extra permissions from Google.
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+   'https://www.googleapis.com/auth/userinfo.email',
+   'https://www.googleapis.com/auth/userinfo.profile',
+    'openid',
+]

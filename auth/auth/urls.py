@@ -22,4 +22,7 @@ urlpatterns = [
     path("facebook/", include("facebook.urls")),
     path("google/", include("google.urls")),
     path('api/', include('pdfapi.urls')),
+    path('api-auth/', include('rest_framework.urls')),
+    path('api-auth/', include('drf_social_oauth2.urls',namespace='drf')),
+    path('api-auth/', include('accounts.urls')),
 ]

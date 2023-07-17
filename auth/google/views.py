@@ -36,46 +36,34 @@ class GoogleLoginAPIView(APIView):
 class GoogleCallbackAPIView(APIView):
     @csrf_exempt
     def get(self, request):
-        flow.fetch_token(authorization_response=request.build_absolute_uri())
+        c=flow.fetch_token(authorization_response=request.build_absolute_uri())
 
         if not request.session["state"] == request.GET["state"]:
             return Response({"message": "Invalid state parameter"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         credentials = flow.credentials
         request_session = requests.session()
-        cached_session = cachecontrol.CacheControl(request_session)
-        token_request = google.auth.transport.requests.Request(session=cached_session)
+        token_request = google.auth.transport.requests.Request(session=request_session)
 
         id_info = id_token.verify_oauth2_token(
             id_token=credentials._id_token,
             request=token_request,
             audience=GOOGLE_CLIENT_ID
         )
-
         request.session["google_id"] = id_info.get("email")
-        request.session["token"] = id_info.get("sub")
         request.session["name"] = id_info.get("name")
         data={}
-        if UserData.objects.filter(google_id=request.session["google_id"]).exists():
-            refresh = RefreshToken.for_user(UserData.objects.get(google_id=request.session["google_id"]))  # Replace `user` with your user object
+        # if UserData.objects.filter(google_id=request.session["google_id"]).exists():
+        # data['access_token'] = c['access_token']
+        # data['refresh_token'] = str(c['refresh_token'])
+        #
+        #     return Response(data, status=status.HTTP_200_OK)
 
-            # Add the JWT token to the response
-            data['access_token'] = str(refresh.access_token)
-            data['refresh_token'] = str(refresh)
-
-            return Response(data, status=status.HTTP_200_OK)
-
-        user=UserData.objects.create(
-            google_id=request.session["google_id"],
-            token=request.session["token"],
-            name=request.session["name"]
-        )
-
-        # Generate JWT token
-        refresh = RefreshToken.for_user(user)  # Replace `user` with your user object
-
-        # Add the JWT token to the response
-        data['access_token'] = str(refresh.access_token)
-        data['refresh_token'] = str(refresh)
-
+        # UserData.objects.create(
+        #     google_id=request.session["google_id"],
+        #     token=request.session["token"],
+        #     name=request.session["name"]
+        # )
+        data['access_token'] = c['access_token']
+        data['refresh_token'] = str(c['refresh_token'])
         return Response(data, status=status.HTTP_200_OK)

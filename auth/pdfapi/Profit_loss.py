@@ -19,170 +19,110 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 #     'today_date_time': '2023-07-05 12:00:00'
 # }
 
+class ProfitLossPDF:
+    def __init__(self, file_name, data):
+        self.file_name = file_name
+        self.data = data
 
-def pro_loss_pdf(file_name, data):
-    current_datetime = datetime.datetime.now()
+    def generate_report(self):
+        current_datetime = datetime.datetime.now()
+        current_date = current_datetime.date()
+        current_time = current_datetime.strftime("%H:%M:%S")
+        current_day = current_datetime.strftime("%A")
+        result = f"{current_day}, {current_date},  {current_time}."
 
-    # Extract date, time, and day
-    current_date = current_datetime.date()
-    current_time = current_datetime.strftime("%H:%M:%S")
-    current_day = current_datetime.strftime("%A")
+        doc = SimpleDocTemplate(
+            self.file_name,
+            pagesize=A4,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=60,
+            bottomMargin=60
+        )
+        styles = getSampleStyleSheet()
+        title_style = styles['Heading2']
+        heading_style = styles['Heading3']
+        paragraph_style = styles['Normal']
+        paragraph_style.alignment = 1
+        title_style.alignment = 1
+        heading_style.alignment = 1
 
-    # Combine into a single string
-    result = f"{current_day}, {current_date},  {current_time}."
+        title = Paragraph("PBCIX", title_style)
+        heading = Paragraph("Profit and Loss", heading_style)
+        dates = Paragraph(f"{self.data['date_from']} - {self.data['date_to']}", heading_style)
 
-    doc = SimpleDocTemplate(file_name, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=60, bottomMargin=60)
-    styles = getSampleStyleSheet()
-    title_style = styles['Heading2']
-    heading_style = styles['Heading3']
-    paragraph_style = styles['Normal']
-    paragraph_style.alignment = 1
-    title_style.alignment = 1
-    heading_style.alignment = 1  # Center alignment
+        elements = [title, heading, dates, Spacer(1, 10)]
 
-    # Title
-    title = Paragraph("PBCIX", title_style)
-    heading = Paragraph("Profit and Loss", heading_style)
-    dates = Paragraph(f"{data['date_from']} - {data['date_to']}", heading_style)
+        t1 = [['', 'TOTAL']]
+        t2 = [
+            ["Income", ""],
+            ["- Revenue-General", f"{self.data['revenue_general']} ILS"],
+            ["Total Income", f"{self.data['total_income']} ILS"],
+        ]
+        t3 = [["GROSS PROFIT", f"{self.data['gross_profit']} ILS"]]
+        t4 = [
+            ["Expenses", ""],
+            ["- Commissions and fees", f"{self.data['commissions_and_fees']} ILS"],
+            ["- Office expenses", f"{self.data['office_expenses']} ILS"],
+            ["- Other selling expenses", f"{self.data['other_selling_expenses']} ILS"],
+            ["Total Expenses", f"{self.data['total_expense']} ILS"],
+        ]
+        t5 = [["NET EARNINGS", f"{self.data['net_earnings']} ILS"]]
 
-    elements = []
-    elements.append(title)
-    elements.append(heading)
-    elements.append(dates)
-    elements.append(Spacer(1, 10))
-    t1 = [
-        ['', 'TOTAL'],
-    ]
-    t2 = [
+        table1 = self.create_table(t1)
+        table2 = self.create_table(t2, True)
+        table3 = self.create_table(t3)
+        table4 = self.create_table(t4, True)
+        table5 = self.create_table(t5)
 
-        ["Income", ""],
-        ["- Revenue-General", f"{data['revenue_general']} ILS"],
-        ["Total Income", f"{data['total_income']} ILS"],
-    ]
-    t3 = [
-        ["GROSS PROFIT", f"{data['gross_profit']} ILS"],
-    ]
-    t4 = [
-        ["Expenses", ""],
-        ["- Commissions and fees", f"{data['commissions_and_fees']} ILS"],
-        ["- Office expenses", f"{data['office_expenses']} ILS"],
-        ["- Other selling expenses", f"{data['other_selling_expenses']} ILS"],
-        ["Total Expenses", f"{data['total_expense']} ILS"],
-    ]
-    t5 = [
-        ["NET EARNINGS", f"{data['net_earnings']} ILS"],
-    ]
+        elements.extend([table1, table2, table3, table4, table5])
 
-    # Create the table with 2 columns and 10 rows
-    table1 = Table(t1, colWidths=[240, 240])
-    table2 = Table(t2, colWidths=[240, 240])
-    table3 = Table(t3, colWidths=[240, 240])
-    table4 = Table(t4, colWidths=[240, 240])
-    table5 = Table(t5, colWidths=[240, 240])
+        footer_text = f"Accrual Basis {result}"
+        footer = Paragraph(footer_text, paragraph_style)
 
-    table1.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
-        # Customize the top border for the first row  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        def add_footer(canvas, doc):
+            canvas.saveState()
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(colors.gray)
+            footer_x = (doc.width) / 2
+            canvas.drawString(footer_x, doc.bottomMargin + 5, footer_text)
+            canvas.restoreState()
 
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
+        doc.build(elements, onFirstPage=add_footer, onLaterPages=add_footer)
 
-    # Add customized borders
-    table2.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),  # Customize the top border for the first row
-        ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),  # Customize the bottom border for the last row
-        ('LINEBELOW', (0, -1), (-1, -1), 2, 'black'),  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    def create_table(self, data, use_custom_style=False):
+        table_style = self.get_table_style(use_custom_style)
+        table = Table(data, colWidths=[240, 240])
+        table.setStyle(table_style)
+        return table
 
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTWEIGHT', (0, 1), (-1, -2), 'BOLD'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    table3.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
-        # Customize the top border for the first row  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    table4.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),  # Customize the top border for the first row
-        ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),  # Customize the bottom border for the last row
-        ('LINEBELOW', (0, -1), (-1, -1), 2, 'black'),  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTWEIGHT', (0, 1), (-1, -2), 'BOLD'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    table5.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
-        ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
-        # Customize the top border for the first row  # Customize the bottom border for the last row
-        ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),  # Hide the left border
-        ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),  # Hide the right border
-        # Align text in the first column (index 0) to the left
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-
-        # Align text in the second column (index 1) to the right
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-
-    elements.append(table1)
-    elements.append(table2)
-    elements.append(table3)
-    elements.append(table4)
-    elements.append(table5)
-    footer_text = f"Accrual Basis {result}"
-    footer = Paragraph(footer_text, paragraph_style)
-
-    def add_footer(canvas, doc):
-        canvas.saveState()
-        canvas.setFont('Helvetica', 9)
-        canvas.setFillColor(colors.gray)  # Set the footer color to gray
-        footer_x = (doc.width) / 2  # Calculate the x-coordinate to center the footer
-        canvas.drawString(footer_x, doc.bottomMargin + 5, footer_text)  # Center the footer at the bottom of the page
-        canvas.restoreState()
-
-    doc.build(elements, onFirstPage=add_footer, onLaterPages=add_footer)
-
-
+    def get_table_style(self, use_custom_style):
+        if use_custom_style:
+            return TableStyle([
+                ('LINEBELOW', (0, 0), (-1, 0), 2, colors.lightgrey),
+                ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
+                ('LINEABOVE', (0, -1), (-1, -1), 2, colors.lightgrey),
+                ('LINEBELOW', (0, -1), (-1, -1), 2, 'black'),
+                ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),
+                ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+                ('FONTWEIGHT', (0, 1), (-1, -2), 'BOLD'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ])
+        else:
+            return TableStyle([
+                ('LINEBELOW', (0, 0), (-1, 0), 2, 'black'),
+                ('LINEABOVE', (0, 0), (-1, 0), 2, 'black'),
+                ('LINEBEFORE', (0, 0), (0, -1), 0, 'white'),
+                ('LINEAFTER', (-1, 0), (-1, -1), 0, 'white'),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ])
